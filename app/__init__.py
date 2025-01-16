@@ -38,6 +38,8 @@ def create_app():
 
     from app.blueprints.teams_blueprint import teams_bp
     app.register_blueprint(teams_bp, url_prefix='/teams')
+    
+        
 
     # Create all tables
     with app.app_context():
