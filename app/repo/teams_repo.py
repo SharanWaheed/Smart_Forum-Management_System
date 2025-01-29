@@ -1,5 +1,5 @@
 from app.models.teams_model import Team, team_users
-from app.db import db
+from app import db
 from app.models.users_model import User
 
 class TeamRepository:

@@ -1,5 +1,10 @@
 from flask import Blueprint, request, jsonify
 from app.BL.teams_bl import TeamBL
+from webargs.flaskparser import use_args
+
+from app.schema.teams_schema import TeamSchema
+
+
 
 teams_bp = Blueprint('teams_bp', __name__)
 
@@ -10,11 +15,19 @@ def index():
 
 # Create Team
 @teams_bp.route("/create", methods=["POST"])
-def create_team():
-    data = request.get_json()
-    name = data.get('name')
-    description = data.get('description', '')
-    admin_id = data.get('admin_id')
+@use_args(TeamSchema(), location="json")
+def create_team(args):
+ 
+#     data = request.get_json()
+#     name = data.get('name')
+#     description = data.get('description', '')
+#     admin_id = data.get('admin_id')
+
+#     result, status = TeamBL.create_team(name, description, admin_id)
+#     return jsonify(result), status
+    name = args.get('name')
+    description = args.get('description', '')
+    admin_id = args.get('admin_id')
 
     result, status = TeamBL.create_team(name, description, admin_id)
     return jsonify(result), status
@@ -32,7 +45,9 @@ def get_team_by_id(id):
     return jsonify(result), status
 
 # Update Team
+
 @teams_bp.route("/update/<int:id>", methods=["PUT"])
+#@use_args(TeamSchema(), location="json")
 def update_team(id):
     data = request.get_json()
     result, status = TeamBL.update_team(id, **data)
@@ -40,7 +55,7 @@ def update_team(id):
 
 # Delete Team
 @teams_bp.route('/delete/<int:team_id>', methods=['DELETE'])
-def delete_team(team_id):
+def delete_team(team_id): 
     result, status = TeamBL.delete_team(team_id)
     return jsonify(result), status
 
@@ -67,3 +82,4 @@ def remove_user_from_team(team_id):
 def get_users_in_team(team_id):
     result, status = TeamBL.get_users_in_team(team_id)
     return jsonify(result), status
+    

@@ -8,3 +8,4 @@ class TeamSchema(Schema):
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
     created_by = fields.Int()
+users = fields.List(fields.Nested('UserSchema', only=('id', 'name', 'email')), dump_only=True)

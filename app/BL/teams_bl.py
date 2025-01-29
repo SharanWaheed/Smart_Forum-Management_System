@@ -1,7 +1,7 @@
 from app.models.teams_model import Team
 from app.repo.teams_repo import TeamRepository
 from app.repo.users_repo import UserRepository
-from app.db import db
+from app import db
 
 class TeamBL:
     
@@ -103,6 +103,10 @@ class TeamBL:
             return {"message": "User removed from the team successfully."}, 200
         except Exception as e:
             return {"message": f"An error occurred: {str(e)}"}, 500
+
+    @staticmethod
+    def get_teams_by_user(user_id):
+        return Team.query.filter(Team.users.any(id=user_id)).all()
 
     @staticmethod
     def get_users_in_team(team_id):

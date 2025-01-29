@@ -1,18 +1,25 @@
 from werkzeug.security import generate_password_hash
 from app.repo.admin_repo import AdminRepository
 from app.models.admin_model import Admin
+from werkzeug.security import generate_password_hash
+
+from app.schema.admin_schema import AdminSchema
 
 class AdminBL:
     @staticmethod
     def create_admin(name, email, password):
-        # Check if the email already exists
-        if AdminRepository.get_admin_by_email(email):
-            return {"message": "Email already exists."}, 400
-        
         try:
+            # Hash the password before saving it
             hashed_password = generate_password_hash(password)
-            new_admin = AdminRepository.create_admin(name=name, email=email, password=hashed_password)
-            return new_admin, 201
+
+            # Call the repository method to create the admin in the database
+            new_admin = AdminRepository.create_admin(name, email, hashed_password)  # Pass the hashed password
+            
+            # Serialize the new admin using the AdminSchema
+            admin_schema = AdminSchema()
+            serialized_admin = admin_schema.dump(new_admin)
+            
+            return serialized_admin, 201
         except Exception as e:
             return {"message": f"An error occurred: {str(e)}"}, 500
 

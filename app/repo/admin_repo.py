@@ -1,5 +1,6 @@
 from app.models.admin_model import Admin
-from app.db import db
+from app import db
+from sqlalchemy.orm import joinedload
 
 class AdminRepository:
     @staticmethod
@@ -9,9 +10,13 @@ class AdminRepository:
         db.session.commit()
         return new_admin
 
-    @staticmethod
-    def get_all_admins():
-        return Admin.query.all()
+    
+    def get_all_admins_with_users(page=1, per_page=5):
+        # Use joinedload to eagerly load related users
+        
+        return Admin.query.options(joinedload(Admin.users)) \
+            .paginate(page=page, per_page=per_page, error_out=False).items
+
     
     @staticmethod
     def get_admin_by_id(admin_id):
