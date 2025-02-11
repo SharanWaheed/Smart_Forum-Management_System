@@ -1,4 +1,5 @@
 from werkzeug.security import generate_password_hash
+from app import db
 from app.repo.admin_repo import AdminRepository
 from app.models.admin_model import Admin
 from werkzeug.security import generate_password_hash
@@ -36,17 +37,15 @@ class AdminBL:
 
     @staticmethod
     def update_admin(admin_id, **kwargs):
-        try:
-            hashed_password = (
-                generate_password_hash(kwargs.get("password")) if kwargs.get("password") else None
-            )
-            kwargs["password"] = hashed_password
-            updated_admin = AdminRepository.update_admin(admin_id, **kwargs)
-            if not updated_admin:
-                return {"message": "Admin not found."}, 404
-            return updated_admin, 200
-        except Exception as e:
-            return {"message": f"An error occurred: {str(e)}"}, 500
+        admin = Admin.query.get(int(admin_id))
+        if not admin:
+            return {"error": "Admin not found"}, 404  # Return a tuple
+
+        for key, value in kwargs.items():
+            setattr(admin, key, value)  # Dynamically update fields
+
+        db.session.commit()
+        return admin, 200
 
     @staticmethod
     def delete_admin(admin_id):

@@ -4,7 +4,6 @@ from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from app import db
 
-
 class Admin(db.Model):
     __tablename__ = 'admins'
 
@@ -15,8 +14,8 @@ class Admin(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # One-to-Many Relationship with User
-    users = db.relationship('User', backref='created_by_admin', lazy=True)#lazy loading.
+    # One-to-Many Relationship with User (with overlaps)
+    users = db.relationship('User', backref='created_by_admin', lazy=True, overlaps="admin")  
 
     def set_password(self, password):
         self.password = generate_password_hash(password)

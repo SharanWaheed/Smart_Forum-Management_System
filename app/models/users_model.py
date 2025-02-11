@@ -4,7 +4,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 
- 
 class User(db.Model):
     __tablename__ = 'users'
 
@@ -22,15 +21,12 @@ class User(db.Model):
 
     # Foreign Key with Admin
     admin_id = db.Column(db.Integer, db.ForeignKey('admins.id', ondelete='SET NULL'))  
-    admin = relationship("Admin", back_populates="users", foreign_keys=[admin_id])
+    admin = relationship("Admin", back_populates="users", foreign_keys=[admin_id], overlaps="created_by_admin")  
 
     # Many-to-Many Relationship with Team
     teams = db.relationship('Team', secondary='team_users', back_populates='users')
     
     def serialize(self):
-        """
-        Serialize the User object to a dictionary.
-        """
         return {
             "id": self.id,
             "name": self.name,
@@ -48,19 +44,4 @@ class User(db.Model):
         self.password = generate_password_hash(password)
 
     def check_password(self, password):
-        return check_password_hash(self.password)
-
-    # Serialize method to convert User object to JSON-compatible dict
-    def serialize(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'email': self.email,
-            'role': self.role,
-            'is_active': self.is_active,
-            'phone': self.phone,
-            'profile_picture': self.profile_picture,
-            'created_at': self.created_at,
-            'updated_at': self.updated_at,
-            'admin_id': self.admin_id
-        }
+        return check_password_hash(self.password, password)

@@ -4,7 +4,7 @@ from app.models.admin_model import Admin
 from werkzeug.security import generate_password_hash
 
 class AdminSchema(Schema):
-    id = fields.Int(dump_only=True)
+    id = fields.Int(required=False)
     name = fields.Str(required=True, validate=validate.Length(min=1))
     email = fields.Email(required=True)
     password = fields.Str(required=True, load_only=True, validate=validate.Length(min=6))

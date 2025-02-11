@@ -5,6 +5,7 @@ from app import db
 
 class TeamBL:
     
+    # no need for creating manual method for serialization
     @staticmethod
     def serialize_team(team):
         """Serialize a single team object."""

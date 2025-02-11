@@ -1,7 +1,7 @@
 from marshmallow import Schema, fields, validate
 
 class TeamSchema(Schema):
-    id = fields.Int(dump_only=True)
+    id = fields.Int(required=False)
     name = fields.Str(required=True, validate=validate.Length(min=1))
     description = fields.Str()
     admin_id = fields.Int(required=True)  # Ensure this field is defined and required
@@ -9,3 +9,5 @@ class TeamSchema(Schema):
     updated_at = fields.DateTime(dump_only=True)
     created_by = fields.Int()
 users = fields.List(fields.Nested('UserSchema', only=('id', 'name', 'email')), dump_only=True)
+
+    

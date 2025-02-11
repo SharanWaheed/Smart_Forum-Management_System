@@ -42,7 +42,7 @@ def create_app():
     from app.blueprints.admin_blueprint import admin_blueprint
     app.register_blueprint(admin_blueprint, url_prefix='/admin')
 
-
+    # Add correct prefix if needed
     # Create all tables inside the app context
     with app.app_context():
         db.create_all()

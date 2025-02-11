@@ -104,24 +104,18 @@ class UserBL:
         return user.serialize(), 200
 
     @staticmethod
+    @staticmethod
     def update_user(user_id, data):
-        try:
-            logging.debug(f"Received data for update: {data}")  # Debugging
+        user = User.query.get(user_id)
+        if not user:
+            return {"error": "User not found"}, 404
 
-            if "password" in data:
-                data["password"] = generate_password_hash(data["password"])
+        user.name = data.get("name", user.name)
+        user.email = data.get("email", user.email)
+        user.role = data.get("role", user.role)
 
-            logging.debug(f"Data after password hashing: {data}")  # Debugging
-
-            updated_user = UserRepository.update_user(user_id, **data)
-            if not updated_user:
-                return {"message": "User not found."}, 404
-            
-            return {"message": "User updated successfully!", "user": updated_user.serialize()}, 200
-
-        except Exception as e:
-            logging.error(f"Error updating user {user_id}: {str(e)}")
-            return {"message": f"An error occurred: {str(e)}"}, 500
+        db.session.commit()
+        return {"message": "User updated successfully", "user": user.serialize()}
 
     @staticmethod
     def delete_user(user_id):
