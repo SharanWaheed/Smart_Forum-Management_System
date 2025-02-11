@@ -102,4 +102,4 @@ def get_team_by_id(id):
 @use_args({"team_id": fields.Int(required=True), "user_id": fields.Int(required=True)}, location="json")
 def add_user_to_team(args):
     result, status = TeamBL.add_user_to_team(args["team_id"], args["user_id"])
-    return jsonify(result), status    
+    return jsonify(result), status      
