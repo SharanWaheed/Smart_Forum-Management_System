@@ -4,6 +4,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 
+
+
 class User(db.Model):
     __tablename__ = 'users'
 
@@ -25,6 +27,7 @@ class User(db.Model):
 
     # Many-to-Many Relationship with Team
     teams = db.relationship('Team', secondary='team_users', back_populates='users')
+    allocations = relationship("ResourceAllocation", back_populates="task", cascade="all, delete-orphan")
     
     def serialize(self):
         return {

@@ -25,4 +25,5 @@ class AdminSchema(Schema):
         """ Hash the password after data is loaded into the schema """
         if 'password' in data:
             data['password'] = generate_password_hash(data['password'])
+        # Create object here 
         return data

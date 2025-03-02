@@ -1,4 +1,5 @@
 from dataclasses import fields
+from app import cache
 import token
 from flask import Blueprint,  request, jsonify
 from marshmallow import ValidationError
@@ -43,25 +44,35 @@ from werkzeug.security import check_password_hash
 from flask_jwt_extended import create_access_token
 from app.models.admin_model import Admin
 
-@users_bp.route('/login', methods=['POST'])
+@users_bp.route('/login', methods=['POST'])                                                                                                                                                                                                                                                                                                                                                
 def login():
     try:
         data = request.get_json()
         email = data.get('email')
         password = data.get('password')
-        
+
+        # Check if this email is temporarily blocked due to repeated failures
+        failed_attempts_key = f"failed_attempts_{email}"
+        print("Cache Type:", type(cache))
+
+        failed_attempts = cache.get(failed_attempts_key) or 0
+
+        if failed_attempts >= 5:
+            return jsonify({"message": "Too many failed login attempts. Try again later."}), 429
+
         # Validate admin credentials
         admin = Admin.query.filter_by(email=email).first()
         if not admin:
+            cache.set(failed_attempts_key, failed_attempts + 1, timeout=300)  # Block for 5 mins
             return jsonify({"message": "Invalid email or password"}), 401
 
-        # Log the stored hash and input password for debugging
-        print(f"Stored Hash: {admin.password}")  # Debugging
-        print(f"Input Password: {password}")  # Debugging
-
-        # Check if password matches the stored hash
+        # Check password
         if not check_password_hash(admin.password, password):
+            cache.set(failed_attempts_key, failed_attempts + 1, timeout=300)  # Block for 5 mins
             return jsonify({"message": "Invalid email or password"}), 401
+
+        # Successful login - Reset failed attempts cache
+        cache.delete(failed_attempts_key)
 
         # Generate JWT token with admin role
         access_token = create_access_token(identity=admin.email, additional_claims={"role": "admin"})
@@ -69,7 +80,6 @@ def login():
         return jsonify({"message": "Login successful", "access_token": access_token}), 200
 
     except Exception as e:
-        print(f"Login error: {str(e)}")  # Debug: Log errors
         return jsonify({"message": "Internal Server Error", "error": str(e)}), 500
 
 

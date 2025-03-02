@@ -11,11 +11,14 @@ class AdminRepository:
         return new_admin
 
     
+     
     def get_all_admins_with_users(page=1, per_page=5):
-        # Use joinedload to eagerly load related users
-        
+        """
+        Fetch paginated admins with related users eagerly loaded.
+        Returns a Pagination object, not just the items.
+        """
         return Admin.query.options(joinedload(Admin.users)) \
-            .paginate(page=page, per_page=per_page, error_out=False).items
+            .paginate(page=page, per_page=per_page, error_out=False)
 
     
     @staticmethod

@@ -1,3 +1,4 @@
+from functools import cache
 from flask import Blueprint, request, jsonify
 from marshmallow import ValidationError
 from werkzeug.security import check_password_hash
@@ -11,12 +12,23 @@ from webargs.flaskparser import use_args
 from flask import Blueprint, request, jsonify
 from app.utils.auth import authorize_admin  # Import middleware
 from app.repo.admin_repo import AdminRepository
+from app import cache  # Import cache from app
 
 admin_blueprint = Blueprint('admin', __name__)
+
+
+@admin_blueprint.route("/cached-route")
+@cache.cached(timeout=300)
+def cached_view():
+    return "This is a cached response"
 
 @admin_blueprint.route("/create", methods=["POST"])
 @use_args(AdminSchema(), location="json")  
 def create_admin(args):
+    """use to create new admin etc
+    :param args: dict containing ...
+    return 
+    """
     admin = AdminRepository.create_admin(**args)   
     return jsonify({"message": "Admin created successfully!"}), 201
 
@@ -57,25 +69,34 @@ def create_admin(args):
 
 
 @admin_bp.route('/all', methods=['GET'])
+@cache.cached(timeout=300)  # Cache applied here
 def get_all_admins():
     try:
-        # Get pagination parameters from query string
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 5, type=int)
 
-        # Fetch admins with users eagerly loaded
-        admins_query = AdminRepository.get_all_admins_with_users(page=page, per_page=per_page)
+        # Custom cache key considering pagination
+        cache_key = f"admins_page_{page}_per_page_{per_page}"
+        cached_data = cache.get(cache_key)
 
-        # Serialize the admin data
-        admins_data = [admin.serialize() for admin in admins_query]
+        if cached_data:
+            return jsonify(cached_data), 200
 
-        # Return response with pagination data
-        return jsonify({
+        # Fetch paginated admins with users eagerly loaded
+        pagination = AdminRepository.get_all_admins_with_users(page=page, per_page=per_page)  
+        admins_data = admin_list_schema.dump(pagination.items)
+
+        response_data = {
             "admins": admins_data,
-            "current_page": page,
-            "total_pages": len(admins_query) // per_page + (1 if len(admins_query) % per_page > 0 else 0),
-            "total_records": len(admins_query)
-        }), 200
+            "current_page": pagination.page,
+            "total_pages": pagination.pages,
+            "total_records": pagination.total
+        }
+
+        cache.set(cache_key, response_data, timeout=300)  # Store response in cache
+
+        return jsonify(response_data), 200
+
     except Exception as e:
         return jsonify({"message": f"An error occurred: {str(e)}"}), 500
 
