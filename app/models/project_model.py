@@ -18,7 +18,106 @@ class Project(db.Model):
 
     # Use a string reference instead of direct Task reference
     tasks = db.relationship('Task', secondary=project_tasks, back_populates='projects')
-    allocations = relationship("ResourceAllocation", back_populates="project", cascade="all, delete-orphan")
+    allocations = db.relationship('ResourceAllocation', back_populates='project', lazy=True)  # Keep it consistent
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  # Corrected   
     def __init__(self, name, start_date, end_date, description=None):
         self.name = name
         self.start_date = start_date

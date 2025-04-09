@@ -24,10 +24,11 @@ class User(db.Model):
     # Foreign Key with Admin
     admin_id = db.Column(db.Integer, db.ForeignKey('admins.id', ondelete='SET NULL'))  
     admin = relationship("Admin", back_populates="users", foreign_keys=[admin_id], overlaps="created_by_admin")  
-
+     
     # Many-to-Many Relationship with Team
     teams = db.relationship('Team', secondary='team_users', back_populates='users')
-    allocations = relationship("ResourceAllocation", back_populates="task", cascade="all, delete-orphan")
+    allocations = db.relationship('ResourceAllocation', back_populates='user')
+
     
     def serialize(self):
         return {

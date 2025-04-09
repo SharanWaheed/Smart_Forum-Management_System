@@ -6,7 +6,7 @@ class UserSchema(Schema):
     name = fields.Str(required=False)  # Optional for update
     email = fields.Email(required=False)  # Optional for update
     password = fields.Str(required=False, load_only=True)  # Optional for update
-    role = fields.Str(required=False, missing="member")  # Default role for new users
+    role = fields.Str(required=False, load_default="member")  # Default role for new users
     is_active = fields.Boolean(required=False, missing=True)
     phone = fields.Str(allow_none=True)
     profile_picture = fields.Str(allow_none=True)

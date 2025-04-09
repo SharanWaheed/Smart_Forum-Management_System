@@ -5,6 +5,7 @@ from werkzeug.security import check_password_hash
 
 from app.BL.admin_bl import AdminBL
 from app.models.admin_model import Admin
+from app.schema import admin_schema
 from app.schema.admin_schema import AdminSchema
 from app.repo.admin_repo import AdminRepository
 from app.schema.admin_schema import AdminSchema
@@ -13,6 +14,7 @@ from flask import Blueprint, request, jsonify
 from app.utils.auth import authorize_admin  # Import middleware
 from app.repo.admin_repo import AdminRepository
 from app import cache  # Import cache from app
+from app.schema.admin_schema import  AdminSchema
 
 admin_blueprint = Blueprint('admin', __name__)
 
@@ -42,9 +44,10 @@ def view_teams():
 
  
 admin_bp = Blueprint('admin_bp', __name__)
-
-admin_schema = AdminSchema()
 admin_list_schema = AdminSchema(many=True)
+
+
+
 
 # Test route
 @admin_bp.route('/', methods=['GET'])
@@ -134,8 +137,6 @@ def delete_admin(id):
     except Exception as e:
         return jsonify({"message": f"An error occurred: {str(e)}"}), 500
     
-    
-    
 # Get Admin by ID
 @admin_bp.route('/<int:id>', methods=['GET'])
 
@@ -145,4 +146,5 @@ def get_admin_by_id(id):
         return jsonify(admin_schema.dump(result) if status == 200 else result), status
     except Exception as e:
         return jsonify({"message": f"An error occurred: {str(e)}"}), 500
+    
     

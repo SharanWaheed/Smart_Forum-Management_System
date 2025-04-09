@@ -1,54 +1,90 @@
-from sqlalchemy.orm import Session
+from app import db
 from app.models.allocation import ResourceAllocation
 from app.models.users_model import User
-from app.models.project_model import Project
 from app.models.task_model import Task
+from app.exceptions import BadRequestException, NotFoundException, DatabaseException
 
-def allocate_user(db: Session, user_id: int, project_id: int = None, task_id: int = None, status: str = "Active"):
-    """Assign a user to a project or task."""
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        return None  # User not found
-    
-    allocation = ResourceAllocation(user_id=user_id, project_id=project_id, task_id=task_id, role=user.role, status=status)
-    db.add(allocation)
-    db.commit()
-    db.refresh(allocation)
-    return allocation
+class AllocationRepository:
+    @staticmethod
+    def allocate_user(user_id, project_id=None, task_id=None, status="Active"):
+        """Allocates a user to a task or project, ensuring valid user and role retrieval."""
+        
+        # Fetch the user by ID
+        user = User.query.get(user_id)
+        if not user:
+            raise NotFoundException("User not found.")
 
-def update_allocation(db: Session, allocation_id: int, status: str = None):
-    """Update an existing allocation's status."""
-    allocation = db.query(ResourceAllocation).filter(ResourceAllocation.id == allocation_id).first()
-    if not allocation:
-        return None  # Allocation not found
-    
-    if status:
-        allocation.status = status
-    
-    db.commit()
-    db.refresh(allocation)
-    return allocation
+        # Extract role and email from the user record
+        role = user.role
+        user_email = user.email
 
-def deallocate_user(db: Session, allocation_id: int):
-    """Remove a user allocation."""
-    allocation = db.query(ResourceAllocation).filter(ResourceAllocation.id == allocation_id).first()
-    if not allocation:
-        return None  # Allocation not found
-    
-    db.delete(allocation)
-    db.commit()
-    return True
+        # Create a new allocation record
+        allocation = ResourceAllocation(
+            user_id=user_id,
+            project_id=project_id,
+            task_id=task_id,
+            role=role,
+            status=status
+        )
 
-def get_allocations(db: Session, project_id: int = None, task_id: int = None):
-    """Fetch allocations, optionally filtering by project or task."""
-    query = db.query(ResourceAllocation).join(User).with_entities(
-        ResourceAllocation.id, ResourceAllocation.project_id, ResourceAllocation.task_id,
-        ResourceAllocation.user_id, User.role, ResourceAllocation.status, ResourceAllocation.assigned_at
-    )
-    
-    if project_id:
-        query = query.filter(ResourceAllocation.project_id == project_id)
-    if task_id:
-        query = query.filter(ResourceAllocation.task_id == task_id)
-    
-    return query.all()
+        # Commit the allocation to the database and return result + email
+        try:
+            db.session.add(allocation)
+            db.session.commit()
+            return allocation, user_email  # Returning both for BL use
+        except Exception as e:
+            db.session.rollback()
+            raise DatabaseException(f"Database error during allocation: {str(e)}")
+
+    @staticmethod
+    def update_allocation(allocation_id, project_id=None, task_id=None, status=None):
+        """Updates an existing allocation record based on the provided fields."""
+        allocation = ResourceAllocation.query.get(allocation_id)
+        if not allocation:
+            raise NotFoundException("Allocation not found.")
+
+        if project_id is None and task_id is None and status is None:
+            raise BadRequestException("At least one field (project_id, task_id, or status) must be provided for update.")
+
+        if project_id is not None:
+            allocation.project_id = project_id
+
+        if task_id is not None:
+            task = Task.query.get(task_id)
+            if not task:
+                raise NotFoundException("Task not found.")
+            allocation.task_id = task_id
+
+        if status is not None:
+            allocation.status = status
+
+        db.session.commit()
+        return allocation
+
+    @staticmethod
+    def deallocate_user(allocation_id):
+        """Deletes an allocation record."""
+        allocation = ResourceAllocation.query.get(allocation_id)
+        if not allocation:
+            raise NotFoundException("Allocation not found.")
+
+        try:
+            db.session.delete(allocation)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            raise DatabaseException(f"Database error during deletion: {str(e)}")
+
+    @staticmethod
+    def get_allocations():
+        """Fetches all allocations."""
+        try:
+            return ResourceAllocation.query.all()
+        except Exception as e:
+            raise DatabaseException(f"Database error during fetching allocations: {str(e)}")
+
+
+
+
+
+

@@ -4,7 +4,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask import request, jsonify
 from app.models.admin_model import Admin   
 from app.models.users_model import User 
-  # Ensure you import the Admin model
+# Ensure you import the Admin model
 
 from app import db
 
@@ -32,7 +32,6 @@ def authorize_admin(fn):
 
 
 from werkzeug.security import check_password_hash
-
 def authorize_roles(*allowed_roles):
     def decorator(fn):
         @wraps(fn)

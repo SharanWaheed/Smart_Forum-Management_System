@@ -11,7 +11,18 @@ class Task(db.Model):
     description = db.Column(db.Text, nullable=True)
     due_date = db.Column(db.Date, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
+    
+    def to_dict(self):
+        """Convert Task object to dictionary format."""
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "due_date": str(self.due_date) if self.due_date else None,
+            "created_at": str(self.created_at)
+        }
     # Use a string reference to avoid circular imports
+    
     projects = db.relationship('Project', secondary=project_tasks, back_populates='tasks')
-    allocations = db.relationship("ResourceAllocation", back_populates="task", cascade="all, delete-orphan")
+    allocations = db.relationship('ResourceAllocation', back_populates='task') 
+
